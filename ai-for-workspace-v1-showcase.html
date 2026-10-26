@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI for workspace</title>
+<style>
+:root{--navy:#1f3a5f;--steel:#4a6f94;--mist:#dfe6ee;--bg:#f4f6f9;--ink:#1d2733;--sub:#5d6b7a;--line:#c9d3de;--warn:#b0503f;--ok:#2c6a3f;
+  --l1:#8a6a2e;--l2:#4a6f94;--l3:#2f7a72;--c-HLC:#1f3a5f;--c-DR:var(--l1);--c-DF:var(--l2);--c-EP:var(--l3);--c-O:#1f3a5f;--shade:#eef1f5}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+.serif{font-family:Cambria,Georgia,serif;font-style:italic}
+header{background:var(--navy);color:#fff;padding:18px 24px 0}
+header .row{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
+header h1{font:italic 600 26px Cambria,Georgia,serif;margin:0}
+header .desc{opacity:.8;font-size:13px;margin-top:2px;max-width:760px}
+header .ver{margin-left:auto;display:flex;gap:8px;align-items:center;font-size:12px;flex-wrap:wrap;max-width:100%}
+header select{max-width:100%}
+header select{font:inherit;padding:4px 8px;border-radius:4px;border:1px solid rgba(255,255,255,.4);background:var(--navy);color:#fff}
+nav{display:flex;gap:2px;margin-top:14px;flex-wrap:wrap}
+nav button{background:transparent;border:none;color:#fff;opacity:.7;padding:9px 16px;font-size:13.5px;cursor:pointer;border-bottom:3px solid transparent}
+nav button.on{opacity:1;border-bottom-color:#fff;font-weight:600}
+main{padding:22px 24px 60px}
+.view{display:none}.view.on{display:block}
+.h2{font:italic 20px Cambria,Georgia,serif;color:var(--navy);margin:0 0 10px}
+.h3{font:italic 16px Cambria,Georgia,serif;color:var(--navy);margin:22px 0 8px}
+.hint{font-size:12.5px;color:var(--sub)}
+.card{background:#fff;border-left:4px solid var(--c,var(--steel));padding:12px 16px;margin-bottom:10px;box-shadow:0 1px 2px rgba(20,40,70,.06)}
+.badge{display:inline-block;font-size:10.5px;padding:1px 7px;border-radius:9px;background:var(--mist);color:var(--steel);white-space:nowrap;margin-right:4px}
+.badge.must{background:#e7ecf3;color:var(--navy);font-weight:600}
+.badge.neg{background:#f6e3df;color:var(--warn)}
+.badge.pos{background:#e3efe6;color:var(--ok)}
+.chip{display:inline-flex;font-size:11.5px;padding:2px 9px;border-radius:11px;border:1px solid var(--line);background:#fff;color:var(--steel);cursor:pointer;user-select:none;margin:0 3px 3px 0}
+.chip.off{opacity:.45;text-decoration:line-through}
+.chip.tag{cursor:default}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden;background:#fff}
+.seg button{border:none;background:#fff;padding:6px 12px;font-size:12.5px;color:var(--navy);cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--navy);color:#fff}
+.link{color:var(--steel);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+/* overview */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin:6px 0 4px}
+.tile{flex:1;min-width:170px;background:#fff;border-top:4px solid var(--c);padding:12px 14px;cursor:pointer;box-shadow:0 1px 2px rgba(20,40,70,.06)}
+.tile:hover{box-shadow:0 3px 10px rgba(20,40,70,.15)}
+.tile b{display:block;font:italic 28px Cambria,Georgia,serif;color:var(--navy)}
+.tile .t{font:italic 15px Cambria,Georgia,serif;color:var(--navy)}
+.tile .cats{margin-top:6px;font-size:11.5px;color:var(--sub);line-height:1.6}
+.arrow{display:flex;align-items:center;justify-content:center;width:120px;flex:none;padding:0 6px}
+.arrow span{background:var(--c);color:#fff;font-size:11px;font-weight:700;padding:6px 14px 6px 10px;clip-path:polygon(0 0,calc(100% - 9px) 0,100% 50%,calc(100% - 9px) 100%,0 100%);text-align:center;line-height:1.25}
+.stat{display:flex;gap:8px;flex-wrap:wrap}
+.stat div{background:#fff;border-left:3px solid var(--c,var(--steel));padding:6px 12px;font-size:11.5px;color:var(--sub)}
+.stat b{display:block;font:italic 20px Cambria,Georgia,serif;color:var(--navy)}
+/* map */
+.mapbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.mapbar input{font:inherit;padding:5px 9px;border:1px solid var(--line);border-radius:4px;width:200px}
+#mapwrap{overflow:auto;background:#fff;border:1px solid var(--mist);border-radius:4px}
+#map{position:relative;display:grid;padding:20px 22px 30px;align-items:start;width:max-content}
+#wires{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.colhead{border-left:4px solid var(--c);padding:6px 10px;margin-bottom:10px;font:italic 15px Cambria,Georgia,serif;color:var(--navy);background:#f7f9fb}
+.colhead b{font:700 11px sans-serif;color:var(--c);margin-right:6px}
+.colhead.next{margin-top:22px}
+.box{border:1px solid var(--line);border-radius:6px;padding:6px 7px 0;margin-bottom:10px}
+.box>.bl{font-size:11px;color:var(--sub);margin:0 2px 5px}
+.node{background:#fff;border:1px solid var(--mist);border-left:4px solid var(--c);border-radius:3px;padding:7px 10px;margin-bottom:7px;cursor:pointer;transition:opacity .12s,box-shadow .12s}
+.node:hover{box-shadow:0 2px 8px rgba(20,40,70,.18)}
+.node .tt{font-weight:700;color:var(--navy);font-size:12.5px}
+.node .tx{font-size:12px;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.node .ids{display:flex;justify-content:space-between;font-size:10px;font-weight:700;margin-top:3px}
+.node .ids .dc{color:var(--l2)}.node .ids .pc{color:var(--l3)}
+.node.match{box-shadow:0 0 0 2px #e0b84a}
+.node.sel{box-shadow:0 0 0 2px var(--steel)}
+.dim .node:not(.on){opacity:.22}
+.wire{fill:none;stroke-width:1.5;transition:opacity .12s}
+.wire.HLC{stroke:#1f3a5f}.wire.DR{stroke:#8a6a2e;stroke-dasharray:5 4}.wire.DF{stroke:#4a6f94}.wire.EP{stroke:#2f7a72;stroke-width:1.2}.wire.neg{stroke:var(--warn)}
+.wire.faded{opacity:.07}.wire.hot{stroke-width:2.6}
+.hit{fill:none;stroke:transparent;stroke-width:12;pointer-events:stroke;cursor:pointer}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--sub);margin-top:10px}
+.legend i{display:inline-block;width:22px;border-top:2px solid;vertical-align:middle;margin-right:5px}
+/* panel */
+aside{position:fixed;top:0;right:-440px;width:420px;max-width:100%;height:100vh;background:#fff;box-shadow:-6px 0 20px rgba(20,40,70,.15);transition:right .2s;z-index:20;display:flex;flex-direction:column}
+aside.on{right:0}
+aside .ph{padding:14px 18px;border-left:5px solid var(--c,var(--steel));display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--mist)}
+aside .ph h3{font:italic 18px Cambria,Georgia,serif;margin:0;color:var(--navy)}
+aside .ph button{margin-left:auto;border:none;background:none;font-size:22px;cursor:pointer;color:var(--sub)}
+aside .pb{padding:14px 18px 30px;overflow:auto}
+.lab{font-size:10.5px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 4px}
+.rel{border-left:3px solid var(--c);background:#f7f9fb;padding:6px 10px;margin-bottom:6px;font-size:12.5px;cursor:pointer}
+.rel:hover{background:#eef2f7}
+.rel .r{color:var(--sub);font-size:12px;margin-top:2px}
+.ev{border-left:3px solid var(--steel);background:#f7f9fb;padding:6px 10px;margin-bottom:6px;font-size:12.5px}
+.q{font-size:11px;color:var(--navy);letter-spacing:1px}.q i{font-style:normal;color:var(--line)}
+.tri{font-size:12px;color:var(--sub);background:#f4f6f9;border-left:3px solid var(--steel);padding:6px 9px;margin-bottom:6px}
+.tri.weak{border-left-color:var(--warn)}
+/* conjectures */
+.conj{display:grid;grid-template-columns:1fr 1.1fr 1fr;gap:10px;align-items:start;background:#fff;padding:12px;margin-bottom:10px;border-left:4px solid var(--l3)}
+.conj h4{margin:0 0 6px;font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.04em}
+.conj .mid{border-left:1px dashed var(--line);border-right:1px dashed var(--line);padding:0 10px}
+@media (max-width:820px){.conj{grid-template-columns:1fr}.conj .mid{border:none;padding:0}.arrow{width:100%;padding:6px 0}}
+/* versions */
+#vtree{position:relative;overflow:auto;background:#fff;border:1px solid var(--mist);border-radius:4px;padding:10px}
+.vcard{position:absolute;width:210px;background:#fff;border:1px solid var(--mist);border-left:4px solid var(--bc);border-radius:3px;padding:8px 11px;cursor:pointer}
+.vcard.cur{box-shadow:0 0 0 2px var(--steel)}
+.vcard .vn{font-size:11px;font-weight:700;color:var(--navy)}
+.vcard .vl{font:italic 14.5px Cambria,Georgia,serif;color:var(--navy)}
+.diff div{display:flex;gap:10px;font-size:12.5px;padding:2px 0}
+.diff b{width:70px;color:var(--navy)}
+.add{color:var(--ok)}.rem{color:var(--warn)}.chg{color:var(--steel)}
+footer{font-size:11.5px;color:var(--sub);padding:0 24px 30px}
+</style>
+</head>
+<body>
+<header>
+  <div class="row">
+    <div><h1 id="pname"></h1><div class="desc" id="pdesc"></div></div>
+    <div class="ver" id="verbox"></div>
+  </div>
+  <nav id="nav"></nav>
+</header>
+<main>
+  <section class="view" id="v-overview"></section>
+  <section class="view" id="v-map"></section>
+  <section class="view" id="v-conj"></section>
+  <section class="view" id="v-evidence"></section>
+  <section class="view" id="v-versions"></section>
+</main>
+<footer id="foot"></footer>
+<aside id="panel"><div class="ph"><h3 id="ptitle"></h3><button id="pclose" aria-label="Close">×</button></div><div class="pb" id="pbody"></div></aside>
+<script>
+const DATA={"project":{"name":"AI for workspace","description":""},"exported":"2026-10-26T19:33:04.966Z","lines":"straight","startTab":"overview","sections":{"conj":true,"evidence":true,"versions":false},"scheme":{"names":{"HLC":"High-level conjecture","DR":"Design requirements","DF":"Design features","EP":"Enactment processes","O":"Outcomes"},"cols":{"HLC":{"cats":[],"catNames":{},"box":"none","fieldOpts":[],"fields":[]},"DR":{"cats":["User Character","Organization context","Potential Risk"],"catNames":{"User Character":"User feature","Organization context":"Organization context","Potential Risk":"Potential Risk"},"box":"type","fieldOpts":[],"fields":[["priority","Priority","select"],["lit","Evidence","lit"]]},"DF":{"cats":["Input","KC","Output","PD"],"catNames":{"Input":"Progressive input scaffolding","KC":"Employee-led knowledge construction","Output":"Understandable and verifiable outputs","PD":"Supporting professional growth"},"box":"type","fieldOpts":[],"fields":[]},"EP":{"cats":["PA","OI","PE"],"catNames":{"PA":"Participant artifacts","OI":"Observable interactions","PE":"Participant experience"},"box":"type","fieldOpts":[],"fields":[["indicator","Observable indicator","text"],["data","Data source","multi"],["status","Status","select"]]},"O":{"cats":["B","C","A"],"catNames":{"B":"Behavioral","C":"Cognitive","A":"Affective"},"box":"type","fieldOpts":[],"fields":[["goal","Instructional objective","area"]]}}},"head":"vmvl4e067qsr","current":"vmvl4e067qsr","versions":[{"id":"vmvl4e067qsr","n":1,"parent":null,"branch":"main","label":"Initial design","tags":["prospective","cycle 1"],"note":"","created":"2026-10-23T15:23:44.095Z","data":{"nodes":[{"id":"nmvl5dm3xsoh","col":"DF","code":"Chat history management system","cat":"KC","text":"Search past conversations, bookmark useful answers, save notes, create verified case records, and review learning through flashcards or weekly recaps.\n\n","module":"Scribe","dims":[],"stage":"","order":2},{"id":"nmvl5fi392b1","col":"DF","code":"Progressive prompting","cat":"Input","text":"Built-in prompts embedded in the input template","module":"Scribe","dims":[],"stage":"","order":35},{"id":"nmvl5ilb960v","col":"DF","code":"Task-specific feedback","cat":"PD","text":"Task-specific feedback that recognizes employees' reasoning and contributions;","module":"Scribe","dims":[],"stage":"","order":20},{"id":"nmvmn0an39hl","col":"O","code":"Reduce unnecessary cognitive load","cat":"C","text":"","goal":"","order":10},{"id":"nmvmn0nw4mzi","col":"O","code":"Reduce mental pressure","cat":"A","text":"","goal":"","order":9},{"id":"nmvmn0urqagt","col":"O","code":"Support critical thinking","cat":"C","text":"limit over-offloading and dependence","goal":"","order":11},{"id":"nmvmn19fbtp3","col":"O","code":"Support long-term professional development","cat":"C","text":"","goal":"","order":8},{"id":"nmvmn1p67i27","col":"EP","code":"Organizing history","cat":"OI","text":"Users search, bookmark, and organize their existing chat history.","indicator":"","data":[],"status":"—","order":49},{"id":"nmvmn4cuqrs2","col":"EP","code":"Active verification","cat":"OI","text":"Users check sources, uncertainty, and verification steps, and question or correct responses before acting.","indicator":"","data":["Observation"],"status":"—","order":38},{"id":"nmvmn5gj1trf","col":"DF","code":"Knowledge-building tools","cat":"KC","text":"Notes, verified case records, flashcards, and weekly recaps that form a personal knowledge base.","module":"Scribe","dims":[],"stage":"","order":17},{"id":"nmvmn64978xe","col":"DF","code":"Progress visualization","cat":"PD","text":"A knowledge portfolio and an optional progress dashboard, milestones, and badges tied to demonstrated skills.","module":"Scribe","dims":[],"stage":"","order":18},{"id":"nmvmno8p9ryb","col":"DF","code":"Verification support","cat":"Output","text":"Source labels (company documents vs. external information), uncertainty flags, verification steps, and prompts to consult managers on judgment issues.","module":"Scribe","dims":[],"stage":"","order":4},{"id":"nmvmnoth10xt","col":"DF","code":"Adaptive responses","cat":"Output","text":"A concise answer first, expandable step-by-step explanations, and detail adapted to novice or experienced staff.","module":"Scribe","dims":[],"stage":"","order":3},{"id":"nmvmwwdcannb","col":"O","code":"More human communication","cat":"B","text":"","order":21,"goal":""},{"id":"nmvmx3onpdia","col":"DR","code":"Pro-AI workplace culture","cat":"Organization context","text":"The company encourages employees to use AI","order":23,"priority":"should","lit":[]},{"id":"nmvmx75hlr0b","col":"DR","code":"Informal shared norms for AI ethical use","cat":"Organization context","text":"Don’t enter customer information","order":22,"priority":"should","lit":[]},{"id":"nmvmxcozv8qm","col":"HLC","code":"Balance immediate task support, collaboration, and long-term professional development.","cat":"","text":"","order":26},{"id":"nmvmxenlf21s","col":"DR","code":"Limited budget for new tech","cat":"Organization context","text":"Existing tools; minimal financial and time maintenance costs","order":28,"priority":"should","lit":[]},{"id":"nmvmxkw7aop3","col":"DR","code":"Small organization","cat":"Organization context","text":"Small organization with limited staff","order":27,"priority":"should","lit":[]},{"id":"nmvmyou1gbx5","col":"DR","code":"Varied motivation","cat":"User Character","text":"Part-time students vs. career-oriented employees; early turnover when the job’s value is unclear","order":31,"priority":"should","lit":[]},{"id":"nmvmypbftaya","col":"DR","code":"Little prior knowledge for position","cat":"User Character","text":"New hires often start with no repair or customer-service experience","order":30,"priority":"should","lit":[]},{"id":"nmvmypt3x8s6","col":"DR","code":"High AI acceptance","cat":"User Character","text":"AI use seen as normal and smart","order":29,"priority":"should","lit":[]},{"id":"nmvmyrvepi8r","col":"DR","code":"weakening interpersonal communication","cat":"Potential Risk","text":"Potential reduction in opportunities for human interaction and empathetic communication practice","order":33,"priority":"should","lit":["lmvn7nfu8v7d"]},{"id":"nmvmyuz1gh5j","col":"DR","code":"Unverified trust and reuse of incorrect information","cat":"Potential Risk","text":"","order":34,"priority":"should","lit":[]},{"id":"nmvmyvzjr014","col":"DR","code":"Privacy concerns","cat":"Potential Risk","text":"","order":32,"priority":"should","lit":[]},{"id":"nmvmzis9tr8m","col":"DF","code":"Structured input scaffolding","cat":"Input","text":"Task-specific fields with dropdowns (device, issue, diagnosis, customer needs) and an editable summary before response generation.","order":52},{"id":"nmvmzqkmimt6","col":"EP","code":"Recognized contribution","cat":"PE","text":"Recognition of their own reasoning and contributions.","order":48,"indicator":"","data":[],"status":"—"},{"id":"nmvn0nkhn9fs","col":"EP","code":"Reviewing and Knowledge constructing","cat":"OI","text":"Users review and construct knowledge through notes, verified case records, flashcards, or weekly recaps.","order":14,"indicator":"","data":[],"status":"—"},{"id":"nmvn0oa5ohwv","col":"EP","code":"Knowledge portfolio","cat":"PA","text":"A portfolio and progress records (milestones, badges) tied to demonstrated skills.","order":44,"indicator":"","data":[],"status":"—"},{"id":"nmvn0vr092f6","col":"EP","code":"Structured description","cat":"OI","text":"Users describe situations through guided follow-up questions and task-specific input fields","order":12,"indicator":"","data":[],"status":"—"},{"id":"nmvn0wdyozzm","col":"EP","code":"Personal knowledge base","cat":"PA","text":"A knowledge base built from their own work cases.","order":41,"indicator":"","data":[],"status":"—"},{"id":"nmvn0yox1aq5","col":"EP","code":"Reduced input effort","cat":"PE","text":"Less effort explaining context.","order":36,"indicator":"","data":[],"status":"—"},{"id":"nmvn0zuh75e0","col":"EP","code":"Accessible information","cat":"PE","text":"AI output is easy to understand at their own knowledge level.","order":45,"indicator":"","data":[],"status":"—"},{"id":"nmvn11v4rcv7","col":"EP","code":"Sense of growth","cat":"PE","text":"A sense that daily work builds long-term competence.","order":47,"indicator":"","data":[],"status":"—"},{"id":"nmvn1wha210b","col":"EP","code":"Sharing and discussing cases","cat":"OI","text":"Employees share cases and discuss AI responses and recent problems with coworkers and managers.","order":43,"indicator":"","data":[],"status":"—"},{"id":"nmvn1wy51uhu","col":"DF","code":"Team knowledge exchange: Asynchronous","cat":"KC","text":"using social media they already use where employees share experience.","order":50},{"id":"nmvn1xkvuxk9","col":"DF","code":"Team knowledge exchange: Synchronous","cat":"KC","text":"in-person sessions at work, like a workshop, where they share their experiences and understanding","order":51},{"id":"nmvn2jqfoxxf","col":"DF","code":"Reusable de-identified customer context","cat":"Input","text":"Employees summarize their own cases into reusable, de-identified context to provide to the AI in similar situations.","order":19},{"id":"nmvn2w3z8iuk","col":"O","code":"Habitual verification","cat":"B","text":"","order":53,"goal":""},{"id":"nmvn2x5255l8","col":"O","code":"Perceived job value","cat":"A","text":"","order":54,"goal":""},{"id":"nmvn6zyl12fk","col":"HLC","code":"Cognitive Load Theory","cat":"","text":"","order":55},{"id":"nmvn719dguid","col":"DR","code":"Additional Mental Effort for work","cat":"Potential Risk","text":"Additional Mental Effort for work\n","order":56,"priority":"should","lit":[]},{"id":"nmvn73c6ywmv","col":"HLC","code":"Distributed Cognition and Cognitive Offloading","cat":"","text":"","order":57},{"id":"nmvn73hg8e34","col":"HLC","code":"Human-Centered AI and Workplace Learning","cat":"","text":"","order":58}],"links":[{"id":"kmvmn7oz5krc","from":"nmvmn5gj1trf","to":"nmvmn1p67i27","rationale":"","lit":[],"status":"—"},{"id":"kmvmn98485ui","from":"nmvl5dm3xsoh","to":"nmvmn1p67i27","rationale":"","lit":[],"status":"—"},{"id":"kmvmn9zq0vs1","from":"nmvmn1p67i27","to":"nmvmn0urqagt","rationale":"","lit":[],"status":"—"},{"id":"kmvmnamr4gea","from":"nmvmn4cuqrs2","to":"nmvmn0urqagt","rationale":"","lit":[],"status":"—"},{"id":"kmvmnpaiisrx","from":"nmvmnoth10xt","to":"nmvmn4cuqrs2","rationale":"","lit":[],"status":"—"},{"id":"kmvmnpdxwjpr","from":"nmvmno8p9ryb","to":"nmvmn4cuqrs2","rationale":"","lit":[],"status":"—"},{"id":"kmvmzf4ljb71","from":"nmvmyuz1gh5j","to":"nmvmno8p9ryb","rationale":"","lit":[],"status":"—"},{"id":"kmvmzfeb9c1l","from":"nmvmypbftaya","to":"nmvmnoth10xt","rationale":"","lit":[],"status":"—"},{"id":"kmvmzfjn45r0","from":"nmvmyou1gbx5","to":"nmvl5ilb960v","rationale":"","lit":[],"status":"—"},{"id":"kmvmzfoqaj8q","from":"nmvmyou1gbx5","to":"nmvmn64978xe","rationale":"","lit":[],"status":"—"},{"id":"kmvmzgjbqmbf","from":"nmvmx75hlr0b","to":"nmvl5fi392b1","rationale":"","lit":[],"status":"—"},{"id":"kmvn1y8pq9vt","from":"nmvmyrvepi8r","to":"nmvn1wy51uhu","rationale":"","lit":[],"status":"—"},{"id":"kmvn1ya5arr7","from":"nmvmyrvepi8r","to":"nmvn1xkvuxk9","rationale":"","lit":[],"status":"—"},{"id":"kmvn1yp1l4oo","from":"nmvn1wy51uhu","to":"nmvn0nkhn9fs","rationale":"","lit":[],"status":"—"},{"id":"kmvn1ytmydej","from":"nmvn1wy51uhu","to":"nmvn1wha210b","rationale":"","lit":[],"status":"—"},{"id":"kmvn1yzek1om","from":"nmvn1xkvuxk9","to":"nmvn1wha210b","rationale":"","lit":[],"status":"—"},{"id":"kmvn1zsvb9yo","from":"nmvmn5gj1trf","to":"nmvn0wdyozzm","rationale":"","lit":[],"status":"—"},{"id":"kmvn1zzrrev8","from":"nmvl5dm3xsoh","to":"nmvn0nkhn9fs","rationale":"","lit":[],"status":"—"},{"id":"kmvn26m3auac","from":"nmvmypbftaya","to":"nmvl5fi392b1","rationale":"","lit":[],"status":"—"},{"id":"kmvn27wzusvs","from":"nmvn0vr092f6","to":"nmvmn0an39hl","rationale":"","lit":[],"status":"—"},{"id":"kmvn2auyjhsl","from":"nmvmzis9tr8m","to":"nmvn0vr092f6","rationale":"","lit":[],"status":"—"},{"id":"kmvn2kcp9fg0","from":"nmvmyvzjr014","to":"nmvmzis9tr8m","rationale":"","lit":[],"status":"—"},{"id":"kmvn2kgqjpsj","from":"nmvmyvzjr014","to":"nmvn2jqfoxxf","rationale":"","lit":[],"status":"—"},{"id":"kmvn2n7c7ued","from":"nmvl5fi392b1","to":"nmvn0vr092f6","rationale":"","lit":[],"status":"—"},{"id":"kmvn2nbdq96o","from":"nmvl5fi392b1","to":"nmvn0yox1aq5","rationale":"","lit":[],"status":"—"},{"id":"kmvn2nokfj9n","from":"nmvn2jqfoxxf","to":"nmvn0vr092f6","rationale":"","lit":[],"status":"—"},{"id":"kmvn2on1lnc3","from":"nmvmnoth10xt","to":"nmvn0zuh75e0","rationale":"","lit":[],"status":"—"},{"id":"kmvn2pceertb","from":"nmvmxkw7aop3","to":"nmvn1xkvuxk9","rationale":"","lit":[],"status":"—"},{"id":"kmvn2peekdpw","from":"nmvmxkw7aop3","to":"nmvn1wy51uhu","rationale":"","lit":[],"status":"—"},{"id":"kmvn2pop9a1z","from":"nmvmxenlf21s","to":"nmvmn5gj1trf","rationale":"","lit":[],"status":"—"},{"id":"kmvn2psv0pyx","from":"nmvmxenlf21s","to":"nmvmno8p9ryb","rationale":"","lit":[],"status":"—"},{"id":"kmvn2ptyka0r","from":"nmvmxenlf21s","to":"nmvmnoth10xt","rationale":"","lit":[],"status":"—"},{"id":"kmvn2pyq1486","from":"nmvmxenlf21s","to":"nmvn1wy51uhu","rationale":"","lit":[],"status":"—"},{"id":"kmvn2qbcmlwt","from":"nmvmxenlf21s","to":"nmvmn64978xe","rationale":"","lit":[],"status":"—"},{"id":"kmvn2qzs59cd","from":"nmvmn5gj1trf","to":"nmvn0oa5ohwv","rationale":"","lit":[],"status":"—"},{"id":"kmvn2r6bqtmq","from":"nmvl5dm3xsoh","to":"nmvn0oa5ohwv","rationale":"","lit":[],"status":"—"},{"id":"kmvn2rvibf99","from":"nmvn2jqfoxxf","to":"nmvn0wdyozzm","rationale":"","lit":[],"status":"—"},{"id":"kmvn2ta3yhca","from":"nmvl5ilb960v","to":"nmvmzqkmimt6","rationale":"","lit":[],"status":"—"},{"id":"kmvn2xmbjevh","from":"nmvn0wdyozzm","to":"nmvmn19fbtp3","rationale":"","lit":[],"status":"—"},{"id":"kmvn2xz0fa1z","from":"nmvn0oa5ohwv","to":"nmvmn19fbtp3","rationale":"","lit":[],"status":"—"},{"id":"kmvn2y2i64hh","from":"nmvn0vr092f6","to":"nmvmn0nw4mzi","rationale":"","lit":[],"status":"—"},{"id":"kmvn2y74pl52","from":"nmvmn4cuqrs2","to":"nmvn2w3z8iuk","rationale":"","lit":[],"status":"—"},{"id":"kmvn2yfjkg0q","from":"nmvn0nkhn9fs","to":"nmvmn19fbtp3","rationale":"","lit":[],"status":"—"},{"id":"kmvn2yq84h12","from":"nmvn1wha210b","to":"nmvmwwdcannb","rationale":"","lit":[],"status":"—"},{"id":"kmvn2yr5n7kx","from":"nmvn1wha210b","to":"nmvn2x5255l8","rationale":"","lit":[],"status":"—"},{"id":"kmvn2ytno4bh","from":"nmvn0yox1aq5","to":"nmvmn0an39hl","rationale":"","lit":[],"status":"—"},{"id":"kmvn2yxcq4e8","from":"nmvn0zuh75e0","to":"nmvmn0an39hl","rationale":"","lit":[],"status":"—"},{"id":"kmvn2z5ctexd","from":"nmvmzqkmimt6","to":"nmvn2x5255l8","rationale":"","lit":[],"status":"—"},{"id":"kmvn6xyezmtp","from":"nmvn11v4rcv7","to":"nmvn2x5255l8","rationale":"","lit":[],"status":"—"},{"id":"kmvn6z4bg41j","from":"nmvmn64978xe","to":"nmvn11v4rcv7","rationale":"","lit":[],"status":"—"},{"id":"kmvn74rhz5js","from":"nmvn1xkvuxk9","to":"nmvn0nkhn9fs","rationale":"","lit":[],"status":"—"},{"id":"kmvn76r3e087","from":"nmvn719dguid","to":"nmvl5fi392b1","rationale":"","lit":[],"status":"—"},{"id":"kmvn76urmx2b","from":"nmvn719dguid","to":"nmvmzis9tr8m","rationale":"","lit":[],"status":"—"},{"id":"kmvn770dfc6i","from":"nmvn719dguid","to":"nmvmno8p9ryb","rationale":"","lit":[],"status":"—"},{"id":"kmvn787z9wpb","from":"nmvmyou1gbx5","to":"nmvmnoth10xt","rationale":"","lit":[],"status":"—"}],"lit":[{"method":"Survey / questionnaire","kind":"Primary","perspective":"Participants","who":"6 particapates","date":"","quality":"Strong","applicability":"Direct","finding":"Triggers: unfamiliar situations 5/6, second opinion 5/6, during a task 3/6; none before or after a task","id":"lmvn1ctyyh3g","cite":"Trigger"},{"method":"Interview","kind":"Primary","perspective":"SME","who":"","date":"","quality":"","applicability":"","finding":"","id":"lmvn7f7whanc","cite":"New evidence"},{"method":"Survey / questionnaire","kind":"Primary","perspective":"Participants","who":"6 particapates","date":"","quality":"Strong","applicability":"Direct","finding":"troubleshooting 6/6; writing messages, tricky customers, store policies 4/6 each; shift decisions 1/6","id":"lmvn7fhbnc7n","cite":"What to use"},{"method":"Survey / questionnaire","kind":"Primary","perspective":"Participants","who":"6","date":"","quality":"Strong","applicability":"","finding":"Saved search time (M = 6.83), reduced search stress (6.33), broke down complex tasks (6.83); all 6/6","id":"lmvn7jruttql","cite":"Cognitive support"},{"method":"Survey / questionnaire","kind":"Primary","perspective":"Participants","who":"","date":"","quality":"","applicability":"","finding":"Excessive detail or formatting increased reading effort: split 3/3, no neutral (M = 3.67)","id":"lmvn7m091xu9","cite":"Excessive detail or formatting increased reading effort:"},{"method":"Survey / questionnaire","kind":"Primary","perspective":"Participants","who":"","date":"","quality":"","applicability":"","finding":"Better understanding of policies and job (6.17, 5/6); less repeated lookup (4.83, 4/6); heavy reliance (5.67, 6/6)\nAll six remember most of a solved process but still quick-check AI","id":"lmvn7mup3st6","cite":"Cognitive offload and learn"},{"method":"Survey / questionnaire","kind":"Primary","perspective":"Participants","who":"","date":"","quality":"","applicability":"","finding":"Confidence (7.00), comfort asking AI (6.83), AI use seen as normal (7.00), satisfaction (6.67); all 6/6\n\nFelt calmer, at ease, understood; used AI when working alone or when a manager was unavailable","id":"lmvn7nfu8v7d","cite":"Positive feeling of use experience"}]}}]};
+/* ---------- helpers ---------- */
+const $=q=>document.querySelector(q), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const SC=DATA.scheme, KEYS=['HLC','DR','DF','EP','O'];
+const NEG=['Not supported','Implausible','Not achieved'], POS=['Supported','Plausible','Achieved'];
+const LT={HLC:'Embodiment',DR:'Constraint',DF:'Design conjecture',EP:'Process conjecture'};
+const COLOR={HLC:'#1f3a5f',DR:'#8a6a2e',DF:'#4a6f94',EP:'#2f7a72',O:'#1f3a5f'};
+const name=k=>SC.names[k]||k, catName=(k,c)=>((SC.cols[k]||{}).catNames||{})[c]||c;
+let V=null, S=null, tab=DATA.startTab||'overview', layer='full', hidden=new Set(), sel=null, hover=null, query='';
+const node=id=>S.nodes.find(n=>n.id===id), of=k=>S.nodes.filter(n=>n.col===k).slice().sort((a,b)=>(a.order??0)-(b.order??0));
+const ev=id=>S.lit.find(x=>x.id===id);
+const stBadge=s=>s&&s!=='—'?`<span class="badge ${NEG.includes(s)?'neg':POS.includes(s)?'pos':''}">${esc(s)}</span>`:'';
+const fmt=s=>s?new Date(s).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}):'';
+function boxesOf(k,items){
+  const c=SC.cols[k]; if(!c||!c.box||c.box==='none'||k==='HLC') return null;
+  const keys=c.box==='type'?c.cats:(c.fieldOpts||[]), key=n=>c.box==='type'?n.cat:n[c.box];
+  const out=keys.map(x=>[c.box==='type'?catName(k,x):x,items.filter(n=>key(n)===x)]).filter(([,xs])=>xs.length);
+  const rest=items.filter(n=>!keys.includes(key(n))); if(rest.length) out.push(['Other',rest]); return out;
+}
+/* DC / PC identifiers: one per enactment process, numbered within its category */
+function conjIds(){
+  const ids={}, cnt={}, ep=of('EP'), bx=boxesOf('EP',ep), flat=bx?bx.flatMap(([,ns])=>ns):ep;
+  flat.forEach(n=>{const c=n.cat||'EP'; cnt[c]=(cnt[c]||0)+1;
+    const inn=S.links.filter(l=>l.to===n.id&&(node(l.from)||{}).col==='DF'), out=S.links.filter(l=>l.from===n.id);
+    ids[n.id]={dc:inn.length?`DC-${c}-${cnt[c]}`:'',pc:out.length?`PC-${c}-${cnt[c]}`:'',inn,out};});
+  return ids;
+}
+const agg=ls=>{const st=[...new Set(ls.map(l=>l.status||'—'))]; return st.length===1?(st[0]==='—'?'':st[0]):(ls.length?'mixed':'');};
+function pathSet(id){const set=new Set([id]);[true,false].forEach(dir=>{const q=[id];while(q.length){const x=q.pop();S.links.forEach(l=>{const a=dir?l.from:l.to,b=dir?l.to:l.from;if(a===x&&!set.has(b)){set.add(b);q.push(b);}});}});return set;}
+
+/* ---------- shell ---------- */
+const TABS=[['overview','Overview'],['map','Conjecture map'],['conj','Conjectures'],['evidence','Evidence'],['versions','Versions']].filter(([k])=>DATA.sections[k]!==false&&(k!=='versions'||DATA.versions.length>1));
+function setVersion(id){
+  V=DATA.versions.find(v=>v.id===id)||DATA.versions[DATA.versions.length-1]; S=V.data; sel=null; closePanel(true);
+  $('#verbox').innerHTML=(DATA.versions.length>1?`<span>Version</span><select id="vsel">${DATA.versions.map(v=>`<option value="${v.id}" ${v.id===V.id?'selected':''}>v${v.n} · ${esc(v.label)}${v.id===DATA.head?' (latest)':''}</option>`).join('')}</select>`:`<span>v${V.n} · ${esc(V.label)}</span>`)+(V.tags||[]).map(t=>`<span class="chip tag" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.4)">${esc(t)}</span>`).join('');
+  if($('#vsel')) $('#vsel').onchange=e=>setVersion(e.target.value);
+  render();
+}
+function setTab(t){tab=t; document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t)); document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+t)); closePanel(true); render();}
+function render(){({overview:rOverview,map:rMap,conj:rConj,evidence:rEvidence,versions:rVersions})[tab]();}
+
+/* ---------- overview ---------- */
+function rOverview(){
+  const cnt=k=>of(k).length, cats=k=>{const m={};of(k).forEach(n=>{const c=n.cat?catName(k,n.cat):'—';m[c]=(m[c]||0)+1;});return Object.entries(m).map(([c,n])=>`${esc(c)} · ${n}`).join('<br>');};
+  const tile=(k,lay,t,n,c)=>`<div class="tile" style="--c:${COLOR[k]}" data-go="${lay}"><span class="t">${esc(t)}</span><b>${n}</b><div class="cats">${c}</div></div>`;
+  const arrow=(c,t)=>`<div class="arrow" style="--c:${c}"><span>${t}</span></div>`;
+  const ids=conjIds(), eps=Object.values(ids), dcs=eps.filter(x=>x.dc).map(x=>agg(x.inn)), pcs=eps.filter(x=>x.pc).map(x=>agg(x.out));
+  const tally=(xs,labels)=>labels.map(([l,c])=>`<div style="--c:${c}"><b>${xs.filter(x=>l==='Untested'?!x:x===l).length}</b>${l}</div>`).join('');
+  const prim=S.lit.filter(x=>x.kind==='Primary').length, persp=[...new Set(S.lit.map(x=>x.perspective))];
+  const par=V.parent&&DATA.versions.find(v=>v.id===V.parent);
+  $('#v-overview').innerHTML=`
+  ${of('HLC').map(n=>`<div class="card" style="--c:var(--navy)"><div class="hint">High-level conjecture</div><div class="serif" style="font-size:18px;color:var(--navy);margin:2px 0 4px">${esc(n.code)}</div><div>${esc(n.text)}</div></div>`).join('')}
+  <div class="h3">Structure of the design</div>
+  <div class="flow">${tile('DR','cons','Inputs',cnt('HLC')+cnt('DR'),`${cnt('HLC')} high-level conjecture${cnt('HLC')===1?'':'s'}<br>${cats('DR')}`)}${arrow('#8a6a2e','Embodiment &amp; constraints')}${tile('DF','design',name('DF'),cnt('DF'),cats('DF'))}${arrow('#4a6f94','Design conjectures')}${tile('EP','design',name('EP'),cnt('EP'),cats('EP'))}${arrow('#2f7a72','Process conjectures')}${tile('O','process',name('O'),cnt('O'),cats('O'))}</div>
+  <div class="hint">Click a column to open it in the conjecture map.</div>
+  <div class="grid" style="margin-top:18px">
+    <div><div class="h3" style="margin-top:0">Design conjectures (DF → EP)</div><div class="stat">${tally(dcs,[['Supported','var(--ok)'],['Supported, limited data','var(--steel)'],['Not supported','var(--warn)'],['mixed','var(--line)'],['Untested','var(--line)']])}</div></div>
+    <div><div class="h3" style="margin-top:0">Process conjectures (EP → O)</div><div class="stat">${tally(pcs,[['Plausible','var(--ok)'],['Plausible, limited data','var(--steel)'],['Insufficient data','var(--line)'],['Implausible','var(--warn)'],['Untested','var(--line)']])}</div></div>
+    <div><div class="h3" style="margin-top:0">Evidence base</div><div class="stat"><div><b>${S.lit.length}</b>sources</div><div><b>${prim}</b>primary</div><div><b>${persp.length}</b>perspectives</div></div><div class="hint" style="margin-top:6px">${persp.map(esc).join(' · ')}</div></div>
+  </div>
+  <div class="h3">This version</div>
+  <div class="card"><b>v${V.n} · ${esc(V.label)}</b> <span class="hint">branch ${esc(V.branch)} · ${fmt(V.created)}${par?` · builds on v${par.n} ${esc(par.label)}`:''}</span>
+  ${(V.tags||[]).length?`<div style="margin-top:4px">${V.tags.map(t=>`<span class="badge">${esc(t)}</span>`).join('')}</div>`:''}${V.note?`<div style="margin-top:6px">${esc(V.note)}</div>`:''}</div>`;
+}
+
+/* ---------- map ---------- */
+const LAYERS={full:['Full map',['HLC','DR','DF','EP','O'],['HLC','DR','DF','EP']],cons:['Inputs · HLC + DR → DF',['HLC','DR','DF'],['HLC','DR']],design:['Design conjectures · DF → EP',['DF','EP'],['DF']],process:['Process conjectures · EP → O',['EP','O'],['EP']]};
+const shown=n=>LAYERS[layer][1].includes(n.col)&&!hidden.has(n.col+':'+n.cat);
+function rMap(){
+  const L=LAYERS[layer];
+  $('#v-map').innerHTML=`<div class="mapbar"><div class="seg">${Object.entries(LAYERS).map(([k,v])=>`<button data-layer="${k}" class="${k===layer?'on':''}">${v[0]}</button>`).join('')}</div>
+    <input id="q" placeholder="Search cards…" value="${esc(query)}"></div>
+    <div class="mapbar">${L[1].filter(k=>SC.cols[k]&&SC.cols[k].cats.length).map(k=>`<span class="hint"><b style="color:${COLOR[k]}">${k}</b> ${SC.cols[k].cats.map(c=>`<span class="chip ${hidden.has(k+':'+c)?'off':''}" data-cat="${k}:${esc(c)}" title="${esc(catName(k,c))}">${esc(c)}</span>`).join('')}</span>`).join('')}</div>
+    <div id="mapwrap"><div id="map"></div></div>
+    <div class="legend">${L[2].map(k=>`<span><i style="border-color:${COLOR[k]};${k==='DR'?'border-top-style:dashed':''}"></i>${LT[k]}</span>`).join('')}<span><i style="border-color:var(--warn)"></i>Not supported</span><span>Hover a card to trace its path · click a card or line for details</span></div>`;
+  drawMap();
+}
+function drawMap(){
+  const L=LAYERS[layer], m=$('#map'), ids=conjIds();
+  const groups=[['HLC','DR'],['DF'],['EP'],['O']].map(g=>g.filter(k=>L[1].includes(k))).filter(g=>g.length);
+  m.style.gridTemplateColumns=groups.map(()=>groups.length<=2?'320px':'250px').join(' '); m.style.columnGap=groups.length<=2?'160px':'80px';
+  const q=query.trim().toLowerCase();
+  const card=n=>{const id=ids[n.id], hit=q&&(n.code+' '+n.text).toLowerCase().includes(q);
+    return `<div class="node ${hit?'match':''}" data-id="${n.id}" style="--c:${COLOR[n.col]}"><div class="tt">${esc(n.code)} ${n.priority==='must'?'<span class="badge must">must</span>':''}${stBadge(n.status)}</div>${n.text?`<div class="tx">${esc(n.text)}</div>`:''}${id&&(id.dc||id.pc)?`<div class="ids"><span class="dc">${id.dc}</span><span class="pc">${id.pc}</span></div>`:''}</div>`;};
+  const sec=(k,i)=>{const xs=of(k).filter(shown), bx=boxesOf(k,xs);
+    return `<div class="colhead ${i?'next':''}" style="--c:${COLOR[k]}"><b>${k}</b>${esc(name(k))}</div>`+(bx?bx.map(([lab,ns])=>`<div class="box"><div class="bl">${esc(lab)}</div>${ns.map(card).join('')}</div>`).join(''):xs.map(card).join('')||'<div class="hint">—</div>');};
+  m.innerHTML='<svg id="wires"></svg>'+groups.map(g=>`<div>${g.map(sec).join('')}</div>`).join('');
+  requestAnimationFrame(wires);
+}
+function wires(){
+  const m=$('#map'), svg=$('#wires'); if(!svg) return;
+  svg.setAttribute('width',m.scrollWidth); svg.setAttribute('height',m.scrollHeight);
+  const mr=m.getBoundingClientRect(), pos={};
+  m.querySelectorAll('.node').forEach(e=>{const r=e.getBoundingClientRect();pos[e.dataset.id]={x:r.left-mr.left,y:r.top-mr.top,w:r.width,h:r.height};});
+  const st=DATA.lines!=='curved', ls=S.links.filter(l=>{const f=node(l.from);return f&&pos[l.from]&&pos[l.to]&&LAYERS[layer][2].includes(f.col);});
+  const outs={},ins={},A=new Map();
+  ls.forEach(l=>{A.set(l.id,[0,0,0,0]);(outs[l.from]=outs[l.from]||[]).push(l);(ins[l.to]=ins[l.to]||[]).push(l);});
+  const at=(p,i,k)=>p.y+p.h*(k===1?.5:.15+.7*i/(k-1)), cy=p=>p.y+p.h/2;
+  Object.values(outs).forEach(xs=>{xs.sort((a,b)=>cy(pos[a.to])-cy(pos[b.to]));xs.forEach((l,i)=>{const p=pos[l.from],a=A.get(l.id);a[0]=p.x+p.w;a[1]=at(p,i,xs.length);});});
+  Object.values(ins).forEach(xs=>{xs.sort((a,b)=>cy(pos[a.from])-cy(pos[b.from]));xs.forEach((l,i)=>{const p=pos[l.to],a=A.get(l.id);a[2]=p.x;a[3]=at(p,i,xs.length);});});
+  let h=`<defs>${Object.entries({HLC:'#1f3a5f',DR:'#8a6a2e',DF:'#4a6f94',EP:'#2f7a72',neg:'#b0503f'}).map(([k,c])=>`<marker id="m-${k}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`).join('')}</defs>`;
+  ls.forEach(l=>{const f=node(l.from),[x1,y1,x2,y2]=A.get(l.id),neg=NEG.includes(l.status);
+    const d=st?`M${x1},${y1} L${x2-2},${y2}`:`M${x1},${y1} C${(x1+x2)/2},${y1} ${(x1+x2)/2},${y2} ${x2},${y2}`;
+    h+=`<path class="wire ${f.col} ${neg?'neg':''}" data-f="${l.from}" data-t="${l.to}" d="${d}" ${st?`marker-end="url(#m-${neg?'neg':f.col})"`:''}/><path class="hit" data-link="${l.id}" d="${d}"><title>${LT[f.col]}${l.status&&l.status!=='—'?' · '+esc(l.status):''}</title></path>`;});
+  svg.innerHTML=h; highlight();
+}
+function highlight(){
+  const m=$('#map'); if(!m) return; const id=sel||hover, set=id&&node(id)?pathSet(id):null;
+  m.classList.toggle('dim',!!set);
+  m.querySelectorAll('.node').forEach(e=>{e.classList.toggle('on',!!set&&set.has(e.dataset.id));e.classList.toggle('sel',e.dataset.id===sel);});
+  m.querySelectorAll('path.wire').forEach(p=>{const on=!!set&&set.has(p.dataset.f)&&set.has(p.dataset.t);p.classList.toggle('hot',on);p.classList.toggle('faded',!!set&&!on);});
+}
+
+/* ---------- read-only panel ---------- */
+function qDots(q){const L=['Strong','Moderate','Limited','Anecdotal'],i=L.indexOf(q);if(i<0)return '<span class="q"><i>○○○○</i> unrated</span>';return `<span class="q">${'●'.repeat(4-i)}<i>${'○'.repeat(i)}</i> ${esc(q)}</span>`;}
+function evHTML(x){return `<div class="ev"><b>${esc(x.cite)}</b><div style="margin:3px 0"><span class="badge ${x.kind==='Primary'?'must':''}">${esc(x.kind)} · ${esc(x.method)}</span><span class="badge">${esc(x.perspective)}</span>${x.applicability==='Indirect'?'<span class="badge">indirect</span>':''}${qDots(x.quality)}</div>${x.who?`<div class="hint">${esc(x.who)}${x.date?' · '+esc(x.date):''}</div>`:''}${x.finding?`<div>${esc(x.finding)}</div>`:''}</div>`;}
+function triang(ids){const xs=(ids||[]).map(ev).filter(Boolean); if(!xs.length) return '<div class="tri weak">No evidence linked.</div>';
+  const prim=xs.filter(x=>x.kind==='Primary').length, ps=[...new Set(xs.map(x=>x.perspective))], weak=ps.length<2||!prim;
+  return `<div class="tri ${weak?'weak':''}"><b>${xs.length}</b> source${xs.length>1?'s':''} · <b>${prim}</b> primary · ${ps.map(esc).join(', ')}${weak?(!prim?' — no primary data':' — single perspective'):' — multiple perspectives'}</div>`;}
+function openPanel(title,color,html){$('#ptitle').textContent=title;$('#panel .ph').style.setProperty('--c',color);$('#pbody').innerHTML=html;$('#panel').classList.add('on');$('#pbody').scrollTop=0;}
+function closePanel(quiet){$('#panel').classList.remove('on'); if(sel){sel=null; if(!quiet) highlight();}}
+function showNode(id){
+  const n=node(id); if(!n) return; sel=id; if(tab==='map') highlight();
+  const ids=conjIds()[id], f=(SC.cols[n.col]||{}).fields||[];
+  const relRow=(l,other,dir)=>`<div class="rel" style="--c:${COLOR[node(l.from).col]}" data-link="${l.id}"><b>${dir==='in'?'← ':'→ '}${esc(other.code)}</b> <span class="hint">${LT[node(l.from).col]}</span> ${stBadge(l.status)}${l.rationale?`<div class="r">${esc(l.rationale)}</div>`:''}</div>`;
+  const inn=S.links.filter(l=>l.to===id&&node(l.from)), out=S.links.filter(l=>l.from===id&&node(l.to));
+  let h=`<div class="hint">${esc(name(n.col))}${n.cat?' · '+esc(catName(n.col,n.cat)):''}</div><div style="margin:6px 0 2px;font-size:15px">${esc(n.text)}</div>`;
+  if(ids&&(ids.dc||ids.pc)) h+=`<div style="margin-top:6px">${ids.dc?`<span class="badge" style="background:#e9eef4;color:var(--l2)">${ids.dc}</span>`:''}${ids.pc?`<span class="badge" style="background:#e6f0ee;color:var(--l3)">${ids.pc}</span>`:''}</div>`;
+  f.forEach(([k,label,type])=>{let v=n[k]; if(type==='lit'||v==null||v===''||v==='—'||(Array.isArray(v)&&!v.length)) return; h+=`<div class="lab">${esc(label)}</div><div>${Array.isArray(v)?v.map(x=>`<span class="badge">${esc(x)}</span>`).join(''):esc(v)}</div>`;});
+  if(n.lit&&n.lit.length){h+=`<div class="lab">Evidence</div>${triang(n.lit)}${n.lit.map(ev).filter(Boolean).map(evHTML).join('')}`;}
+  if(inn.length) h+=`<div class="lab">Comes from</div>`+inn.map(l=>relRow(l,node(l.from),'in')).join('');
+  if(out.length) h+=`<div class="lab">Leads to</div>`+out.map(l=>relRow(l,node(l.to),'out')).join('');
+  openPanel(n.code,COLOR[n.col],h);
+}
+function showLink(lid){
+  const l=S.links.find(x=>x.id===lid); if(!l) return; const a=node(l.from),b=node(l.to);
+  let h=`<div class="rel" style="--c:${COLOR[a.col]}" data-node="${a.id}"><b>${esc(a.code)}</b><div class="r">${esc(a.text)}</div></div><div style="text-align:center;color:var(--sub)">↓</div><div class="rel" style="--c:${COLOR[b.col]}" data-node="${b.id}"><b>${esc(b.code)}</b><div class="r">${esc(b.text)}</div></div>`;
+  if(l.status&&l.status!=='—') h+=`<div class="lab">Result</div>${stBadge(l.status)}`;
+  if(l.rationale) h+=`<div class="lab">${LT[a.col]==='Constraint'?'How it constrains the feature':LT[a.col]==='Embodiment'?'How the feature embodies it':'Rationale'}</div><div>${esc(l.rationale)}</div>`;
+  h+=`<div class="lab">Evidence</div>${triang(l.lit)}${(l.lit||[]).map(ev).filter(Boolean).map(evHTML).join('')}`;
+  openPanel(LT[a.col],COLOR[a.col],h);
+}
+$('#pbody').addEventListener('click',e=>{const r=e.target.closest('[data-link]'); if(r) return showLink(r.dataset.link); const n=e.target.closest('[data-node]'); if(n) showNode(n.dataset.node);});
+$('#pclose').onclick=()=>closePanel();
+document.addEventListener('keydown',e=>{if(e.key==='Escape') closePanel();});
+
+/* ---------- conjectures ---------- */
+function rConj(){
+  const ids=conjIds(), ep=of('EP'), bx=boxesOf('EP',ep)||[['',ep]];
+  const item=(l,n)=>`<div class="rel" style="--c:${COLOR[n.col]}" data-link="${l.id}"><b>${esc(n.code)}</b> ${stBadge(l.status)}<div class="r">${esc(l.rationale||n.text)}</div></div>`;
+  $('#v-conj').innerHTML=`<div class="h2">Design and process conjectures</div><div class="hint" style="margin-bottom:12px">Each enactment process carries one design conjecture (which features should produce it) and one process conjecture (which outcomes it should lead to). Click any row for its rationale and evidence.</div>`+
+  bx.map(([lab,ns])=>`${lab?`<div class="h3">${esc(lab)}</div>`:''}`+ns.map(n=>{const x=ids[n.id];
+    return `<div class="conj"><div><h4>${x.dc?`${x.dc} ${stBadge(agg(x.inn))}`:'No design conjecture'}</h4>${x.inn.map(l=>item(l,node(l.from))).join('')||'<div class="hint">No features linked</div>'}</div>
+    <div class="mid"><h4>Enactment process</h4><div class="rel" style="--c:var(--l3)" data-node="${n.id}"><b>${esc(n.code)}</b> ${stBadge(n.status)}<div class="r">${esc(n.text)}</div></div>${n.indicator?`<div class="hint">Indicator: ${esc(n.indicator)}</div>`:''}</div>
+    <div><h4>${x.pc?`${x.pc} ${stBadge(agg(x.out))}`:'No process conjecture'}</h4>${x.out.map(l=>item(l,node(l.to))).join('')||'<div class="hint">No outcomes linked</div>'}</div></div>`;}).join('')).join('');
+}
+$('#v-conj').addEventListener('click',e=>{const r=e.target.closest('[data-link]'); if(r) return showLink(r.dataset.link); const n=e.target.closest('[data-node]'); if(n) showNode(n.dataset.node);});
+
+/* ---------- evidence ---------- */
+function rEvidence(){
+  const P=['Participants','SME','Stakeholders','Design team','Published research'];
+  const refs=id=>{const r=[];S.nodes.forEach(n=>{if((n.lit||[]).includes(id)) r.push([n.id,n.code]);});S.links.forEach(l=>{if((l.lit||[]).includes(id)){const a=node(l.from),b=node(l.to);if(a&&b) r.push([null,a.code+'→'+b.code,l.id]);}});return r;};
+  const groups=[...P,...new Set(S.lit.map(x=>x.perspective).filter(p=>!P.includes(p)))].map(p=>[p,S.lit.filter(x=>x.perspective===p)]).filter(([,xs])=>xs.length);
+  $('#v-evidence').innerHTML=`<div class="h2">Evidence</div><div class="stat" style="margin-bottom:8px">${P.map(p=>`<div><b>${S.lit.filter(x=>x.perspective===p).length}</b>${p}</div>`).join('')}<div><b>${S.lit.filter(x=>x.kind==='Primary').length}</b>Primary</div><div><b>${S.lit.filter(x=>x.kind!=='Primary').length}</b>Secondary</div></div>`+
+  (groups.map(([p,xs])=>`<div class="h3">${esc(p)} <span class="hint">${xs.length}</span></div>`+xs.map(x=>{const r=refs(x.id);return evHTML(x).replace(/<\/div>$/,`<div style="margin-top:4px">${r.map(([nid,t,lid])=>`<span class="chip" ${nid?`data-node="${nid}"`:`data-link="${lid}"`}>${esc(t)}</span>`).join('')||'<span class="hint">not linked</span>'}</div></div>`);}).join('')).join('')||'<div class="hint">No evidence recorded.</div>');
+}
+$('#v-evidence').addEventListener('click',e=>{const r=e.target.closest('[data-link]'); if(r) return showLink(r.dataset.link); const n=e.target.closest('[data-node]'); if(n) showNode(n.dataset.node);});
+
+/* ---------- versions ---------- */
+function diff(a,b){const rows=[];KEYS.forEach(k=>{const A=new Map(a.nodes.filter(n=>n.col===k).map(n=>[n.id,JSON.stringify({...n,order:0})])),B=new Map(b.nodes.filter(n=>n.col===k).map(n=>[n.id,JSON.stringify({...n,order:0})]));let ad=0,rm=0,ch=0;B.forEach((s,id)=>{if(!A.has(id))ad++;else if(A.get(id)!==s)ch++;});A.forEach((s,id)=>{if(!B.has(id))rm++;});if(ad||rm||ch)rows.push([k,ad,rm,ch]);});
+  const cmp=(A,B,label,key)=>{const a=new Map(A.map(x=>[key(x),JSON.stringify(x)])),b=new Map(B.map(x=>[key(x),JSON.stringify(x)]));let ad=0,rm=0,ch=0;b.forEach((s,k)=>{if(!a.has(k))ad++;else if(a.get(k)!==s)ch++;});a.forEach((s,k)=>{if(!b.has(k))rm++;});if(ad||rm||ch)rows.push([label,ad,rm,ch]);};
+  cmp(a.links,b.links,'Links',l=>l.from+'>'+l.to); cmp(a.lit||[],b.lit||[],'Evidence',x=>x.id); return rows;}
+function rVersions(){
+  const vs=DATA.versions, kids={}; vs.forEach(v=>(kids[v.parent||'_']=kids[v.parent||'_']||[]).push(v));
+  const pos={}; let row=0,maxX=0; const place=(v,d)=>{pos[v.id]={x:d,y:row};maxX=Math.max(maxX,d);(kids[v.id]||[]).forEach((c,i)=>{if(i)row++;place(c,d+1);});};
+  (kids._||[]).forEach((r,i)=>{if(i)row++;place(r,0);});
+  (vs.filter(v=>!pos[v.id])).forEach(v=>{row++;place(v,0);});
+  const CW=250,RH=120,BC=['#1f3a5f','#4a6f94','#8a99ad'],br=[...new Set(vs.map(v=>v.branch))],bc=b=>BC[br.indexOf(b)%3];
+  const edges=vs.filter(v=>v.parent&&pos[v.parent]).map(v=>{const a=pos[v.parent],b=pos[v.id],x1=a.x*CW+220,y1=a.y*RH+40,x2=b.x*CW+10,y2=b.y*RH+40;return `<path d="M${x1},${y1} C${x1+30},${y1} ${x2-30},${y2} ${x2},${y2}" stroke="${bc(v.branch)}" stroke-width="2" fill="none"/>`;}).join('');
+  const par=V.parent&&vs.find(v=>v.id===V.parent), df=par?diff(par.data,V.data):null;
+  $('#v-versions').innerHTML=`<div class="h2">Design iterations</div><div class="hint" style="margin-bottom:10px">Each version builds on its parent; parallel branches are alternative directions. Click a version to view it.</div>
+  <div id="vtree"><div style="position:relative;width:${(maxX+1)*CW+20}px;height:${(row+1)*RH+10}px"><svg width="${(maxX+1)*CW+20}" height="${(row+1)*RH}" style="position:absolute;left:0;top:0">${edges}</svg>
+  ${vs.map(v=>{const p=pos[v.id];return `<div class="vcard ${v.id===V.id?'cur':''}" data-v="${v.id}" style="left:${p.x*CW+10}px;top:${p.y*RH+10}px;--bc:${bc(v.branch)}"><div class="vn">v${v.n} · ${esc(v.branch)}${v.id===DATA.head?' · latest':''}</div><div class="vl">${esc(v.label)}</div><div>${(v.tags||[]).map(t=>`<span class="badge">${esc(t)}</span>`).join('')}</div></div>`;}).join('')}</div></div>
+  <div class="h3">v${V.n} · ${esc(V.label)}</div><div class="card">${V.note?`<div>${esc(V.note)}</div>`:'<div class="hint">No note for this version.</div>'}
+  ${df?`<div class="lab">Changes since v${par.n}</div><div class="diff">${df.length?df.map(([k,a,r,c])=>`<div><b>${k}</b><span class="add">+${a}</span><span class="rem">−${r}</span><span class="chg">~${c} edited</span></div>`).join(''):'<div class="hint">No changes.</div>'}</div>`:''}</div>`;
+}
+$('#v-versions').addEventListener('click',e=>{const c=e.target.closest('[data-v]'); if(c) setVersion(c.dataset.v);});
+
+/* ---------- events ---------- */
+$('#v-overview').addEventListener('click',e=>{const t=e.target.closest('[data-go]'); if(t){layer=t.dataset.go; setTab('map');}});
+$('#v-map').addEventListener('click',e=>{
+  const l=e.target.closest('[data-layer]'); if(l){layer=l.dataset.layer; sel=null; closePanel(true); return rMap();}
+  const c=e.target.closest('[data-cat]'); if(c){const k=c.dataset.cat; hidden.has(k)?hidden.delete(k):hidden.add(k); return rMap();}
+  const h=e.target.closest('[data-link]'); if(h) return showLink(h.dataset.link);
+  const n=e.target.closest('.node'); if(n) return showNode(n.dataset.id);
+  if(sel) closePanel();
+});
+$('#v-map').addEventListener('input',e=>{if(e.target.id==='q'){query=e.target.value; drawMap();}});
+$('#v-map').addEventListener('mouseover',e=>{const n=e.target.closest('.node'); const id=n?n.dataset.id:null; if(id!==hover){hover=id; highlight();}});
+$('#v-map').addEventListener('mouseleave',()=>{hover=null; highlight();});
+window.addEventListener('resize',()=>tab==='map'&&wires());
+
+/* ---------- start ---------- */
+document.title=DATA.project.name;
+$('#pname').textContent=DATA.project.name; $('#pdesc').textContent=DATA.project.description||'';
+$('#nav').innerHTML=TABS.map(([k,l])=>`<button data-t="${k}">${l}</button>`).join('');
+$('#nav').onclick=e=>{const b=e.target.closest('[data-t]'); if(b) setTab(b.dataset.t);};
+$('#foot').textContent=`Read-only project showcase · exported ${fmt(DATA.exported)} from the Conjecture Map tool`;
+if(!TABS.some(([k])=>k===tab)) tab=TABS[0][0];
+document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+tab));
+document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+setVersion(DATA.current);
+</script>
+</body>
+</html>
